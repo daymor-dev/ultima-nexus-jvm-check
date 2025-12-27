@@ -1,5 +1,5 @@
 = Ultima Nexus JVM Check
-:toc: left
+:toc: preamble
 :toclevels: 2
 :icons: font
 :source-highlighter: highlight.js
@@ -341,6 +341,13 @@ The JAR contains:
 * PMD 7.17.0+
 * Spotless 8.1.0+ (Gradle) / 2.44.0+ (Maven)
 * Gradle 8.0+ / Maven 3.8.0+
+
+== Contribution and Code of conduct
+
+Contributions are welcome! +
+If you find a bug, want to correct an issue or suggest improvements, please check out this link:./CONTRIBUTING.adoc[contributing].
+
+The project follows a code of conduct, please check out this link:./CODE_OF_CONDUCT.md[code of conduct].
 
 == Links
 
