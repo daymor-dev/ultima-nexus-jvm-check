@@ -5,10 +5,13 @@
 :source-highlighter: highlight.js
 :highlightjs-theme: monokai
 
-image:https://img.shields.io/badge/version-1.0.0-blue[Version]
-image:https://img.shields.io/github/license/daymor-dev/ultima-nexus-jvm-gradle-plugins[GitHub License]
+image:https://img.shields.io/github/v/release/daymor-dev/ultima-nexus-jvm-check?label=version[Version, link="https://github.com/daymor-dev/ultima-nexus-jvm-check/releases/latest"]
+image:https://img.shields.io/github/license/daymor-dev/ultima-nexus-jvm-check[License]
+image:https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/ci.yml/badge.svg[CI, link="https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/ci.yml"]
+image:https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/publish.yml/badge.svg[Publish, link="https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/publish.yml"]
+image:https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/github-code-scanning/codeql/badge.svg[CodeQL, link="https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/github-code-scanning/codeql"]
 
-image:https://github.com/codespaces/badge.svg[link="https://codespaces.new/daymor-dev/ultima-nexus-jvm-gradle-plugins?quickstart=1", alt="Open in GitHub Codespaces"]
+image:https://github.com/codespaces/badge.svg[link="https://codespaces.new/daymor-dev/ultima-nexus-jvm-check?quickstart=1", alt="Open in GitHub Codespaces"]
 
 Zero-tolerance quality check configuration for Java projects. Plug and play.
 
@@ -346,3 +349,14 @@ The JAR contains:
 * https://pmd.github.io/[PMD Documentation]
 * https://spotbugs.github.io/[SpotBugs Documentation]
 * https://github.com/diffplug/spotless[Spotless Documentation]
+
+== Contact Information
+
+If you have any questions, feedback, or collaboration ideas, feel free to contact:
+
+* Email: link:mailto:ultima-nexus@daymor.dev[ultima-nexus@daymor.dev]
+* GitHub: https://github.com/daymor-dev/ultima-nexus-jvm-check/discussions
+
+== License
+
+Ultima Nexus JVM check is licensed under the https://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0].
