@@ -1,0 +1,68 @@
+= Contributing to Ultima Nexus JVM Check
+
+== Find a bug?
+
+If you find a bug, please open an https://github.com/daymor-dev/ultima-nexus-jvm-check/issues[issue].
+
+Please provide any information that can help resolve the problem with a short description, a stacktrace, and a minimal reproducible example if applicable.
+
+== Idea for improvement or question
+
+If you have any idea that could improve this project or any question:
+
+* Open an https://github.com/daymor-dev/ultima-nexus-jvm-check/issues[issue]
+* Start a new https://github.com/daymor-dev/ultima-nexus-jvm-check/discussions[discussion]
+
+== Contribute
+
+If you want to contribute by correcting a bug or improving this project, please follow this step:
+
+* Fork the project
+* Create a new branch
+* Apply the changes
+* Add or modify the tests
+* Update the documentation if necessary
+* Submit a pull request
+
+Remember to:
+
+* Run `./gradlew qualityGate` to auto-format and verify code quality before committing
+* Create one branch and one pull request by bug or feature
+
+=== Quality Tools
+
+All quality tools are configured via Gradle convention plugins. No IDE plugins are required.
+
+**Available Commands**:
+
+* `./gradlew spotlessApply` - Auto-format code (Java formatter based on link:src/main/resources/java-formatter.xml[Eclipse formatter])
+* `./gradlew qualityCheck` - Run all quality checks (Checkstyle, PMD, SpotBugs) without tests
+* `./gradlew qualityGate` - Run quality checks + auto-format
+* `./gradlew check` - Full verification (quality checks + tests)
+
+**Quality Rules**:
+
+* link:src/main/resources/checkstyle.xml[Checkstyle rules]
+* link:src/main/resources/pmdRuleset.xml[PMD rules]
+* link:src/main/resources/spotbugs-filter.xml[SpotBugs filter]
+
+=== Git Pre-commit Hook
+
+A Git pre-commit hook is configured via Gradle to automatically run quality checks before each commit. This ensures that code quality standards are enforced before changes are committed to the repository.
+
+The hook runs `qualityCheck` and will block commits that fail the quality checks.
+
+== Code of conduct
+
+The project follows a code of conduct, please check out this link:./CODE_OF_CONDUCT.md[code of conduct].
+
+== Contact Information
+
+If you have any questions, feedback, or collaboration ideas, feel free to contact:
+
+* Email: link:mailto:ultima-nexus-jvm@daymor.dev[ultima-nexus-jvm@daymor.dev]
+* GitHub: https://github.com/daymor-dev/ultima-nexus-jvm-check/discussions
+
+== License
+
+Ultima Nexus JVM Check is licensed under the https://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0].

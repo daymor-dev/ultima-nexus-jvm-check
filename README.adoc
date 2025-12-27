@@ -1,0 +1,348 @@
+= Ultima Nexus JVM Check
+:toc: left
+:toclevels: 2
+:icons: font
+:source-highlighter: highlight.js
+:highlightjs-theme: monokai
+
+image:https://img.shields.io/badge/version-1.0.0-blue[Version]
+image:https://img.shields.io/github/license/daymor-dev/ultima-nexus-jvm-gradle-plugins[GitHub License]
+
+image:https://github.com/codespaces/badge.svg[link="https://codespaces.new/daymor-dev/ultima-nexus-jvm-gradle-plugins?quickstart=1", alt="Open in GitHub Codespaces"]
+
+Zero-tolerance quality check configuration for Java projects. Plug and play.
+
+== Overview
+
+Ready-to-use quality configurations:
+
+* **Checkstyle** - Code style and structure rules
+* **PMD** - Bug detection and best practices
+* **SpotBugs** - Static bytecode analysis for bugs
+* **Spotless** - Code formatting (Eclipse formatter)
+* **License header** - Apache 2.0 template
+
+**Philosophy**: `maxErrors=0`, `maxWarnings=0`
+
+== Usage with Gradle Convention Plugins (Recommended)
+
+The Ultima Nexus JVM framework uses Gradle convention plugins to apply quality checks automatically. This is the recommended approach for projects using the framework.
+
+=== Convention Plugin Setup
+
+Add the convention plugins to your `build.gradle.kts`:
+
+[source,kotlin]
+----
+plugins {
+    alias(libs.plugins.check.checkstyle)    // Checkstyle
+    alias(libs.plugins.check.pmd)           // PMD
+    alias(libs.plugins.check.format.java)   // Spotless (Java formatter)
+}
+----
+
+The plugins automatically:
+
+* Resolve `ultima-nexus-jvm-check` artifact from the version catalog
+* Extract and apply configuration files from the JAR
+* Configure tool versions from the version catalog
+* Set up `qualityCheck` and `qualityGate` tasks
+
+=== Version Catalog Configuration
+
+In `gradle/libs.versions.toml`:
+
+[source,toml]
+----
+[versions]
+checkstyle = "12.2.0"
+pmd = "7.17.0"
+
+[libraries]
+ultima-nexus-jvm-check = { module = "dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check", version = "1.0.0" }
+
+[plugins]
+check-checkstyle = { id = "dev.daymor.ultimanexus.jvm.gradle.check.checkstyle" }
+check-pmd = { id = "dev.daymor.ultimanexus.jvm.gradle.check.pmd" }
+check-spotbugs = { id = "dev.daymor.ultimanexus.jvm.gradle.check.spotbugs" }
+check-format-java = { id = "dev.daymor.ultimanexus.jvm.gradle.check.format-java" }
+----
+
+=== Available Quality Tasks
+
+[source,bash]
+----
+./gradlew qualityCheck    # Run all quality checks (Checkstyle, PMD, SpotBugs, Spotless check)
+./gradlew qualityGate     # Run quality checks + auto-format code
+./gradlew spotlessApply   # Auto-format code only
+./gradlew checkstyleMain  # Checkstyle only
+./gradlew pmdMain         # PMD only
+----
+
+== Manual Setup (Gradle Kotlin DSL)
+
+For projects not using the convention plugins, you can configure the tools manually.
+
+=== Full Setup
+
+[source,kotlin]
+----
+plugins {
+    java
+    checkstyle
+    pmd
+    id("com.diffplug.spotless") version "8.1.0"
+}
+
+repositories {
+    mavenCentral()
+}
+
+val checkVersion = "1.0.0"
+
+// Create configuration to resolve the check artifact
+val checkArtifact: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+dependencies {
+    checkArtifact("dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check:$checkVersion")
+}
+
+val checkJarFile: File by lazy {
+    checkArtifact.resolve().first { it.name.contains("ultima-nexus-jvm-check") }
+}
+
+// === CHECKSTYLE ===
+checkstyle {
+    toolVersion = "12.2.0"
+    config = resources.text.fromArchiveEntry(checkJarFile, "checkstyle.xml")
+    maxErrors = 0
+    maxWarnings = 0
+    // Optional: custom properties
+    configProperties = mapOf(
+        "checkstyle.header.file" to "$rootDir/checkstyle/headerFile.txt",
+        "checkstyle.suppressions" to "$rootDir/checkstyle/checkstyle-suppressions.xml",
+        "checkstyle.file.suppressions" to "$rootDir/checkstyle/checkstyle-file-suppressions.xml"
+    )
+}
+
+// === PMD ===
+pmd {
+    toolVersion = "7.17.0"
+    ruleSets = emptyList()
+    ruleSetConfig = resources.text.fromArchiveEntry(checkJarFile, "pmdRuleset.xml")
+    threads = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+}
+
+tasks.withType<Pmd>().configureEach {
+    reports {
+        xml.required = false
+        html.required = true
+    }
+}
+
+// === SPOTLESS (Formatter) ===
+spotless {
+    java {
+        eclipse().configFile(
+            zipTree(checkJarFile)
+                .matching { include("java-formatter.xml") }
+                .singleFile
+        )
+        // Optional: license header from JAR
+        licenseHeaderFile("$rootDir/checkstyle/headerFile.txt", "package")
+    }
+}
+
+// Run formatter before checkstyle
+tasks.named("checkstyleMain") {
+    mustRunAfter(tasks.named("spotlessApply"))
+}
+----
+
+=== Minimal Setup (Checkstyle Only)
+
+[source,kotlin]
+----
+plugins {
+    java
+    checkstyle
+}
+
+val checkArtifact: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+dependencies {
+    checkArtifact("dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check:1.0.0")
+}
+
+val checkJarFile: File by lazy {
+    checkArtifact.resolve().first { it.name.contains("ultima-nexus-jvm-check") }
+}
+
+checkstyle {
+    toolVersion = "12.2.0"
+    config = resources.text.fromArchiveEntry(checkJarFile, "checkstyle.xml")
+    maxErrors = 0
+    maxWarnings = 0
+}
+----
+
+== Manual Setup (Maven)
+
+[source,xml]
+----
+<properties>
+    <ultima-check.version>1.0.0</ultima-check.version>
+</properties>
+
+<build>
+    <plugins>
+        <!-- Checkstyle -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>3.6.0</version>
+            <dependencies>
+                <dependency>
+                    <groupId>dev.daymor.ultima-nexus.jvm</groupId>
+                    <artifactId>ultima-nexus-jvm-check</artifactId>
+                    <version>${ultima-check.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.puppycrawl.tools</groupId>
+                    <artifactId>checkstyle</artifactId>
+                    <version>12.2.0</version>
+                </dependency>
+            </dependencies>
+            <configuration>
+                <configLocation>checkstyle.xml</configLocation>
+                <maxAllowedViolations>0</maxAllowedViolations>
+                <violationSeverity>warning</violationSeverity>
+            </configuration>
+        </plugin>
+
+        <!-- PMD -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-pmd-plugin</artifactId>
+            <version>3.26.0</version>
+            <dependencies>
+                <dependency>
+                    <groupId>dev.daymor.ultima-nexus.jvm</groupId>
+                    <artifactId>ultima-nexus-jvm-check</artifactId>
+                    <version>${ultima-check.version}</version>
+                </dependency>
+            </dependencies>
+            <configuration>
+                <rulesets>
+                    <ruleset>pmdRuleset.xml</ruleset>
+                </rulesets>
+                <maxAllowedViolations>0</maxAllowedViolations>
+            </configuration>
+        </plugin>
+
+        <!-- Spotless (Formatter) -->
+        <plugin>
+            <groupId>com.diffplug.spotless</groupId>
+            <artifactId>spotless-maven-plugin</artifactId>
+            <version>2.44.0</version>
+            <configuration>
+                <java>
+                    <eclipse>
+                        <file>java-formatter.xml</file>
+                    </eclipse>
+                </java>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+----
+
+== Configuration Properties
+
+The checkstyle.xml supports these configurable properties:
+
+[cols="2,3,2"]
+|===
+|Property |Description |Default
+
+|`checkstyle.header.file` |Path to license header file |Optional
+|`checkstyle.suppressions` |Path to XPath suppressions file |Optional
+|`checkstyle.file.suppressions` |Path to file suppressions |Optional
+|===
+
+=== Example: Custom Suppressions
+
+Create `checkstyle/checkstyle-suppressions.xml`:
+
+[source,xml]
+----
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+    <!-- Relax line length for tests -->
+    <suppress checks="LineLength" files=".*Test\.java"/>
+
+    <!-- Skip generated code -->
+    <suppress checks=".*" files="[\\/]generated[\\/]"/>
+</suppressions>
+----
+
+=== Example: License Header
+
+Create `checkstyle/headerFile.txt`:
+
+[source,text]
+----
+/*
+ * Copyright (C) 2025 Your Company
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
+----
+
+== Suppressing Violations
+
+=== Inline
+
+[source,java]
+----
+@SuppressWarnings("checkstyle:LineLength")
+public void method() { }
+
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+public void anotherMethod() { }
+----
+
+== Contents
+
+The JAR contains:
+
+* `checkstyle.xml` - Checkstyle rules (zero-tolerance)
+* `pmdRuleset.xml` - PMD rules (all Java categories)
+* `spotbugs-filter.xml` - SpotBugs exclusion filter
+* `java-formatter.xml` - Eclipse code formatter
+* `apache-license-header.txt` - Apache 2.0 header template
+
+== Compatibility
+
+* Java 11+
+* Checkstyle 12.2.0+
+* PMD 7.17.0+
+* Spotless 8.1.0+ (Gradle) / 2.44.0+ (Maven)
+* Gradle 8.0+ / Maven 3.8.0+
+
+== Links
+
+* https://github.com/daymor-dev/ultima-nexus-jvm[Ultima Nexus JVM Framework]
+* https://checkstyle.org/[Checkstyle Documentation]
+* https://pmd.github.io/[PMD Documentation]
+* https://spotbugs.github.io/[SpotBugs Documentation]
+* https://github.com/diffplug/spotless[Spotless Documentation]
