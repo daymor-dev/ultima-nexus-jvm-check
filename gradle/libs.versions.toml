@@ -4,6 +4,7 @@ ultimanexus-gradle-plugins = "1.0.0"
 [plugins]
 # Feature plugins
 ultimanexus-feature-publish = { id = "dev.daymor.ultimanexus.jvm.gradle.feature.publish", version.ref = "ultimanexus-gradle-plugins" }
+ultimanexus-feature-publishMavenCentral = { id = "dev.daymor.ultimanexus.jvm.gradle.feature.publish-maven-central", version.ref = "ultimanexus-gradle-plugins" }
 
 # Base plugins
 ultimanexus-base-lifecycle = { id = "dev.daymor.ultimanexus.jvm.gradle.base.lifecycle", version.ref = "ultimanexus-gradle-plugins" }
