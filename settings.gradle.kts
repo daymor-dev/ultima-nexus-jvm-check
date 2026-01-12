@@ -1,8 +1,9 @@
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
     }
 }
 
-rootProject.name = "ultima-nexus-jvm-check"
+plugins {
+    id("dev.daymor.ultimanexus.jvm.gradle.feature.publish-maven-central") version "1.0.0"
+}

@@ -8,9 +8,14 @@ on:
     types: [published]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -25,7 +30,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Publish to Maven Central
-        run: ./gradlew publish
+        run: ./gradlew publishAggregationToCentralPortal
         env:
           SIGNINGKEY: ${{ secrets.SIGNINGKEY }}
           SIGNINGPASSWORD: ${{ secrets.SIGNINGPASSWORD }}
