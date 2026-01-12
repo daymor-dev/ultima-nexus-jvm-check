@@ -27,60 +27,23 @@ Ready-to-use quality configurations:
 
 **Philosophy**: `maxErrors=0`, `maxWarnings=0`
 
-== Usage with Gradle Convention Plugins (Recommended)
+== Quick Start with Gradle Plugins (Recommended)
 
-The Ultima Nexus JVM framework uses Gradle convention plugins to apply quality checks automatically. This is the recommended approach for projects using the framework.
-
-=== Convention Plugin Setup
-
-Add the convention plugins to your `build.gradle.kts`:
+For projects using the https://github.com/daymor-dev/ultima-nexus-jvm-gradle-plugins[Ultima Nexus JVM Gradle Plugins]:
 
 [source,kotlin]
 ----
 plugins {
-    alias(libs.plugins.check.checkstyle)    // Checkstyle
-    alias(libs.plugins.check.pmd)           // PMD
-    alias(libs.plugins.check.format.java)   // Spotless (Java formatter)
+    alias(libs.plugins.ultimanexus.jvm.bundle.check)
 }
 ----
 
-The plugins automatically:
+The plugins automatically resolve this artifact and apply all quality configurations.
 
-* Resolve `ultima-nexus-jvm-check` artifact from the version catalog
-* Extract and apply configuration files from the JAR
-* Configure tool versions from the version catalog
-* Set up `qualityCheck` and `qualityGate` tasks
+For detailed setup and configuration options, see:
 
-=== Version Catalog Configuration
-
-In `gradle/libs.versions.toml`:
-
-[source,toml]
-----
-[versions]
-checkstyle = "12.2.0"
-pmd = "7.17.0"
-
-[libraries]
-ultima-nexus-jvm-check = { module = "dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check", version = "1.0.0" }
-
-[plugins]
-check-checkstyle = { id = "dev.daymor.ultimanexus.jvm.gradle.check.checkstyle" }
-check-pmd = { id = "dev.daymor.ultimanexus.jvm.gradle.check.pmd" }
-check-spotbugs = { id = "dev.daymor.ultimanexus.jvm.gradle.check.spotbugs" }
-check-format-java = { id = "dev.daymor.ultimanexus.jvm.gradle.check.format-java" }
-----
-
-=== Available Quality Tasks
-
-[source,bash]
-----
-./gradlew qualityCheck    # Run all quality checks (Checkstyle, PMD, SpotBugs, Spotless check)
-./gradlew qualityGate     # Run quality checks + auto-format code
-./gradlew spotlessApply   # Auto-format code only
-./gradlew checkstyleMain  # Checkstyle only
-./gradlew pmdMain         # PMD only
-----
+* https://github.com/daymor-dev/ultima-nexus-jvm-gradle-plugins[Ultima Nexus JVM Gradle Plugins] - Full framework documentation
+* https://github.com/daymor-dev/ultima-nexus-jvm-gradle-plugins/blob/main/plugins-check/README.adoc[plugins-check module] - Detailed check plugin configuration
 
 == Manual Setup (Gradle Kotlin DSL)
 
@@ -351,7 +314,8 @@ The project follows a code of conduct, please check out this link:./CODE_OF_COND
 
 == Links
 
-* https://github.com/daymor-dev/ultima-nexus-jvm[Ultima Nexus JVM Framework]
+* https://github.com/daymor-dev/ultima-nexus-jvm-gradle-plugins[Ultima Nexus JVM Gradle Plugins]
+* https://github.com/daymor-dev/ultima-nexus-jvm-gradle-plugins/blob/main/plugins-check/README.adoc[plugins-check Module Documentation]
 * https://checkstyle.org/[Checkstyle Documentation]
 * https://pmd.github.io/[PMD Documentation]
 * https://spotbugs.github.io/[SpotBugs Documentation]
