@@ -1,25 +1,26 @@
 ## Description
 A clear and concise description of what this pull request does.
 
-## Type of Change
-- [ ] Bug fix (checkstyle/pmd/spotbugs/spotless rule adjustment)
-- [ ] New feature (new rules or configuration)
-- [ ] Documentation update
-- [ ] Other (please describe)
+## Related Issue
+Closes #
 
-## Affected Configuration Files
+## Type of Change
+- [ ] Bug fix
+- [ ] New rule
+- [ ] Rule adjustment
+- [ ] Breaking change
+- [ ] Documentation update
+- [ ] Other
+
+## Affected Configuration
 - [ ] checkstyle.xml
 - [ ] pmdRuleset.xml
 - [ ] spotbugs-filter.xml
 - [ ] java-formatter.xml
-- [ ] apache-license-header.txt
-- [ ] Other: _______________
+- [ ] Other
 
 ## Checklist
-- [ ] I have run `./gradlew qualityGate` successfully
-- [ ] I have tested the configuration changes in a sample project
-- [ ] I have updated the documentation (README/CONTRIBUTING) if needed
-- [ ] New rules include inline documentation explaining their purpose
+- [ ] The configuration has been tested in a sample project
+- [ ] Documentation has been updated if needed
 
 ## Additional Context
-Add any other context about the pull request here.

@@ -1,28 +1,31 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: Bug Report
+about: Report a bug to help us improve
 title: ''
 labels: bug
-assignees: malcolmR4
-
+assignees: ''
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Description
+A clear and concise description of the bug.
 
-**To Reproduce**
+## To Reproduce
 Steps to reproduce the behavior:
+1.
+2.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Expected Behavior
+What you expected to happen.
 
-**Minimal reproducible example**
-It can help a lot to have a link to a project.
-
-**Environment**
-- Tool version (Checkstyle/PMD/SpotBugs/Spotless):
+## Environment
 - Java version:
-- Gradle/Maven version:
+- Gradle version:
+- Tool version (Checkstyle/PMD/SpotBugs/Spotless):
 
-**Additional context**
-Add any other context about the problem here.
+## Affected Configuration
+checkstyle.xml, pmdRuleset.xml, spotbugs-filter.xml, or java-formatter.xml.
+
+## Minimal Reproducible Example
+A link to a repository or gist demonstrating the issue.
+
+## Additional Context
