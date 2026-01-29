@@ -2,5 +2,4 @@
 ultimanexus-gradle-plugins = "1.0.0"
 
 [plugins]
-# Feature plugins
 ultimanexus-feature-publish = { id = "dev.daymor.ultimanexus.jvm.gradle.feature.publish", version.ref = "ultimanexus-gradle-plugins" }
