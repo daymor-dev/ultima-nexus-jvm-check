@@ -38,7 +38,20 @@ plugins {
 }
 ----
 
-The plugins automatically resolve this artifact and apply all quality configurations.
+That's it! The plugins automatically resolve this artifact from Maven Central and apply all quality configurations. No additional configuration required.
+
+=== Pinning a Specific Version (Optional)
+
+To use a specific version instead of the plugin's built-in fallback, add to your `gradle/libs.versions.toml`:
+
+[source,toml]
+----
+[versions]
+ultima-nexus-jvm-check = "1.2.0"
+
+[libraries]
+ultima-nexus-jvm-check = { module = "dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check", version.ref = "ultima-nexus-jvm-check" }
+----
 
 For detailed setup and configuration options, see:
 
