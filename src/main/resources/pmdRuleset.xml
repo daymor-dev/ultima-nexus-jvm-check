@@ -19,6 +19,8 @@
         <exclude name="ShortMethodName"/>
         <exclude name="ShortVariable"/>
         <exclude name="LongVariable"/>
+        <exclude name="OnlyOneReturn"/>
+        <exclude name="AtLeastOneConstructor"/>
         <exclude name="TypeParameterNamingConventions"/>
         <exclude name="CommentDefaultAccessModifier"/>
     </rule>
@@ -37,7 +39,9 @@
     <rule ref="category/java/errorprone.xml"/>
 
     <!-- Multithreading -->
-    <rule ref="category/java/multithreading.xml"/>
+    <rule ref="category/java/multithreading.xml">
+        <exclude name="UseConcurrentHashMap"/>
+    </rule>
 
     <!-- Performance -->
     <rule ref="category/java/performance.xml"/>
