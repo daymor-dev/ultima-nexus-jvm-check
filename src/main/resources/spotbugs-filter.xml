@@ -36,4 +36,22 @@
         <Annotation name="org.springframework.boot.context.properties.ConfigurationProperties"/>
     </Match>
 
+    <!-- JPA Entities: equals/hashCode can check against hibernate proxy classes -->
+    <Match>
+        <Bug pattern="EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS"/>
+        <Annotation name="jakarta.persistence.Entity"/>
+    </Match>
+
+    <!-- Spring Beans: injected dependencies are shared singletons, not mutable internal state -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Or>
+            <Annotation name="org.springframework.stereotype.Service"/>
+            <Annotation name="org.springframework.stereotype.Component"/>
+            <Annotation name="org.springframework.stereotype.Repository"/>
+            <Annotation name="org.springframework.web.bind.annotation.RestController"/>
+            <Annotation name="org.springframework.stereotype.Controller"/>
+        </Or>
+    </Match>
+
 </FindBugsFilter>
