@@ -120,6 +120,10 @@ tasks.withType<Pmd>().configureEach {
         xml.required = false
         html.required = true
     }
+    // Use relaxed ruleset for test sources
+    if (name != "pmdMain") {
+        ruleSetConfig = resources.text.fromArchiveEntry(checkJarFile, "pmdRuleset-test.xml")
+    }
 }
 
 // === SPOTLESS (Formatter) ===
@@ -305,7 +309,8 @@ public void anotherMethod() { }
 The JAR contains:
 
 * `checkstyle.xml` - Checkstyle rules (zero-tolerance)
-* `pmdRuleset.xml` - PMD rules (all Java categories)
+* `pmdRuleset.xml` - PMD rules for main sources (all Java categories, strict)
+* `pmdRuleset-test.xml` - PMD rules for test sources (relaxed, excludes false positives)
 * `spotbugs-filter.xml` - SpotBugs exclusion filter
 * `java-formatter.xml` - Eclipse code formatter
 * `apache-license-header.txt` - Apache 2.0 header template
