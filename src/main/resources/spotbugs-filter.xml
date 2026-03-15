@@ -11,6 +11,11 @@
         <Source name="~.*[\\/]generated[\\/].*"/>
     </Match>
 
+    <!-- JMH generated benchmark harness code -->
+    <Match>
+        <Package name="~.*\.jmh_generated"/>
+    </Match>
+
     <!-- module-info.java -->
     <Match>
         <Source name="module-info.java"/>
@@ -44,7 +49,10 @@
 
     <!-- Spring Beans: injected dependencies are shared singletons, not mutable internal state -->
     <Match>
-        <Bug pattern="EI_EXPOSE_REP"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
         <Or>
             <Annotation name="org.springframework.stereotype.Service"/>
             <Annotation name="org.springframework.stereotype.Component"/>
