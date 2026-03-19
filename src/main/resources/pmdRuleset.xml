@@ -11,6 +11,7 @@
 
     <!-- Best Practices -->
     <rule ref="category/java/bestpractices.xml">
+        <exclude name="ExhaustiveSwitchHasDefault"/>
         <exclude name="LooseCoupling"/>
     </rule>
 
@@ -38,9 +39,7 @@
     </rule>
 
     <!-- Error Prone -->
-    <rule ref="category/java/errorprone.xml">
-        <exclude name="ExhaustiveSwitchHasDefault"/>
-    </rule>
+    <rule ref="category/java/errorprone.xml"/>
 
     <!-- Multithreading -->
     <rule ref="category/java/multithreading.xml">
