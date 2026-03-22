@@ -1,5 +1,5 @@
 name: ultima-nexus-jvm-check
 version: latest
-title: Quality Configuration
+title: Ultima Nexus JVM Check
 nav:
   - modules/ROOT/nav.adoc
