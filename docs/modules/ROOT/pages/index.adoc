@@ -58,17 +58,15 @@ All files are located at the root of the JAR classpath (`src/main/resources/`), 
 
 == Quick Setup
 
-=== Gradle (Kotlin DSL)
+=== With Ultima Nexus Gradle Plugins (recommended)
 
-Add the dependency so that quality plugins can resolve the configuration files from the classpath.
+If you use the xref:ultima-nexus-jvm-gradle-plugins::index.adoc[Ultima Nexus Gradle Plugins], all quality tools are wired automatically — no manual configuration needed:
 
 [source,kotlin]
 ----
 // settings.gradle.kts
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-    }
+plugins {
+    id("dev.daymor.ultimanexus.jvm.gradle.bundle.ultima-nexus-jvm-settings") version "1.0.0"
 }
 ----
 
@@ -76,79 +74,53 @@ dependencyResolutionManagement {
 ----
 // build.gradle.kts
 plugins {
-    java
-    checkstyle
-    pmd
+    alias(libs.plugins.ultimanexus.jvm.bundle.spring.boot.complete.application)
 }
+----
 
-val qualityConfig: Configuration by configurations.creating
+Run `./gradlew qualityCheck` to verify. All Checkstyle, PMD, SpotBugs, and formatting rules from this project are applied automatically.
 
+=== Standalone (without Ultima Nexus Gradle Plugins)
+
+Add the artifact to your build classpath and point each tool to its configuration file:
+
+.Gradle (Kotlin DSL)
+[source,kotlin]
+----
 dependencies {
-    qualityConfig("dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check:1.0.0")
-}
-
-// Extract the config JAR so tools can read the files
-val extractQualityConfig by tasks.registering(Copy::class) {
-    from(qualityConfig.map { zipTree(it) })
-    into(layout.buildDirectory.dir("quality-config"))
+    checkstyle("dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check:1.0.0")
 }
 
 checkstyle {
-    toolVersion = "..." // Set by your build; the check project does not control the Checkstyle version
     maxErrors = 0
     maxWarnings = 0
-    configFile = layout.buildDirectory.file("quality-config/checkstyle.xml").get().asFile
-}
-
-tasks.withType<Checkstyle>().configureEach {
-    dependsOn(extractQualityConfig)
-}
-
-pmd {
-    toolVersion = "..." // Set by your build; the check project does not control the PMD version
-    isConsoleOutput = true
-    ruleSetConfig = resources.text.fromFile(
-        layout.buildDirectory.file("quality-config/pmdRuleset.xml")
-    )
-    ruleSets = emptyList()
-}
-
-tasks.withType<Pmd>().configureEach {
-    dependsOn(extractQualityConfig)
+    configFile = resources.text.fromArchiveEntry(
+        configurations.checkstyle.get(), "checkstyle.xml"
+    ).asFile()
 }
 ----
 
-TIP: If you use the Ultima Nexus JVM Gradle plugins, this wiring is handled automatically -- you do not need to write any of the above.
-
-=== Maven
-
+.Maven
 [source,xml]
 ----
-<project>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.6.0</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>dev.daymor.ultima-nexus.jvm</groupId>
-                        <artifactId>ultima-nexus-jvm-check</artifactId>
-                        <version>1.0.0</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
-                    <maxAllowedViolations>0</maxAllowedViolations>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-</project>
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-checkstyle-plugin</artifactId>
+    <dependencies>
+        <dependency>
+            <groupId>dev.daymor.ultima-nexus.jvm</groupId>
+            <artifactId>ultima-nexus-jvm-check</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+    <configuration>
+        <configLocation>checkstyle.xml</configLocation>
+        <maxAllowedViolations>0</maxAllowedViolations>
+    </configuration>
+</plugin>
 ----
 
-Because the configuration files sit at the classpath root, Maven plugins resolve them by name alone.
+Because the configuration files sit at the classpath root, tools resolve them by name alone.
 
 == Tool Versions
 
