@@ -279,3 +279,8 @@ The goals are:
 
 If the formatter's output looks unusual for a particular piece of code, use `@formatter:off` / `@formatter:on` tags.
 But consider whether the code itself could be restructured to format well automatically.
+
+== See Also
+
+* https://github.com/diffplug/spotless[Spotless^]
+* xref:customization.adoc[Customization]

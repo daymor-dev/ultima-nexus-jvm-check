@@ -147,34 +147,17 @@ The plugin uses source set equivalents (`sourceSet.compileClasspath`, `sourceSet
 NOTE: Some "missing class" warnings may persist for classes that are intentionally not on the classpath (e.g., `lombok.Generated`, Spring's `Indexed`, `MessageSource`).
 These are harmless and unfixable without adding unnecessary dependencies.
 
-== Gradle Integration
-
-=== Basic Configuration
+== Gradle Configuration
 
 [source,kotlin]
 ----
 spotbugs {
-    toolVersion = "4.9.3"
-    excludeFilter = layout.buildDirectory.file("quality-config/spotbugs-filter.xml")
+    excludeFilter = file("path/to/spotbugs-filter.xml")
 }
 ----
 
-=== Report Format
-
-[source,kotlin]
-----
-tasks.withType<SpotBugsTask>().configureEach {
-    reports.register("html") {
-        required.set(true)
-    }
-    reports.register("sarif") {
-        required.set(true)
-    }
-}
-----
-
-HTML reports are the most readable for local development.
-SARIF reports integrate with GitHub Code Scanning and other CI tools.
+TIP: If you use the Ultima Nexus Gradle Plugins, this is configured automatically.
+See xref:ultima-nexus-jvm-gradle-plugins::check-plugins.adoc[Quality Check Plugins] for details.
 
 == Adding Project-Specific Exclusions
 
@@ -205,3 +188,8 @@ spotbugs {
 ----
 
 WARNING: Exclusions should be narrow. Always target a specific class and bug pattern rather than broad wildcards.
+
+== See Also
+
+* https://spotbugs.readthedocs.io/en/stable/bugDescriptions.html[SpotBugs Bug Descriptions^]
+* xref:customization.adoc[Customization]

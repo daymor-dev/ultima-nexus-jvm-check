@@ -376,3 +376,7 @@ A growing count may indicate that the rules need adjustment or that the codebase
 Update Checkstyle, PMD, and SpotBugs regularly.
 Newer versions add rules, fix false positives, and improve performance.
 The configuration files in `ultima-nexus-jvm-check` are tested against the versions listed on the xref:index.adoc[Overview] page.
+
+== See Also
+
+* xref:index.adoc[Overview]

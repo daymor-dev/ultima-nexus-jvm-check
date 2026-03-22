@@ -173,7 +173,21 @@ public class Constants {
 
 WARNING: Suppress sparingly. Every suppression should have a clear justification, ideally documented in a comment.
 
+== Gradle Configuration
+
+[source,kotlin]
+----
+pmd {
+    isConsoleOutput = true
+    ruleSetConfig = resources.text.fromFile("path/to/pmdRuleset.xml")
+    ruleSets = emptyList()
+}
+----
+
+TIP: If you use the Ultima Nexus Gradle Plugins, this is configured automatically.
+See xref:ultima-nexus-jvm-gradle-plugins::check-plugins.adoc[Quality Check Plugins] for details.
+
 == See Also
 
-* https://docs.pmd-code.org/latest/pmd_rules_java.html[PMD Java Rules Reference] -- full documentation of every rule and its properties.
-* xref:customization.adoc[Customization] -- how to override or suppress rules in your project.
+* https://docs.pmd-code.org/latest/pmd_rules_java.html[PMD Java Rules Reference^]
+* xref:customization.adoc[Customization]
