@@ -50,7 +50,7 @@ All files are located at the root of the JAR classpath (`src/main/resources/`), 
 [source,xml,subs="+attributes"]
 ----
 <dependency>
-    <groupId>dev.daymor</groupId>
+    <groupId>dev.daymor.ultima-nexus.jvm</groupId>
     <artifactId>ultima-nexus-jvm-check</artifactId>
     <version>1.0.0</version>
 </dependency>
@@ -84,7 +84,7 @@ plugins {
 val qualityConfig: Configuration by configurations.creating
 
 dependencies {
-    qualityConfig("dev.daymor:ultima-nexus-jvm-check:1.0.0")
+    qualityConfig("dev.daymor.ultima-nexus.jvm:ultima-nexus-jvm-check:1.0.0")
 }
 
 // Extract the config JAR so tools can read the files
@@ -94,7 +94,7 @@ val extractQualityConfig by tasks.registering(Copy::class) {
 }
 
 checkstyle {
-    toolVersion = "10.23.1"
+    toolVersion = "..." // Set by your build; the check project does not control the Checkstyle version
     maxErrors = 0
     maxWarnings = 0
     configFile = layout.buildDirectory.file("quality-config/checkstyle.xml").get().asFile
@@ -105,7 +105,7 @@ tasks.withType<Checkstyle>().configureEach {
 }
 
 pmd {
-    toolVersion = "7.17.0"
+    toolVersion = "..." // Set by your build; the check project does not control the PMD version
     isConsoleOutput = true
     ruleSetConfig = resources.text.fromFile(
         layout.buildDirectory.file("quality-config/pmdRuleset.xml")
@@ -133,7 +133,7 @@ TIP: If you use the Ultima Nexus JVM Gradle plugins, this wiring is handled auto
                 <version>3.6.0</version>
                 <dependencies>
                     <dependency>
-                        <groupId>dev.daymor</groupId>
+                        <groupId>dev.daymor.ultima-nexus.jvm</groupId>
                         <artifactId>ultima-nexus-jvm-check</artifactId>
                         <version>1.0.0</version>
                     </dependency>
@@ -152,8 +152,9 @@ Because the configuration files sit at the classpath root, Maven plugins resolve
 
 == Tool Versions
 
-The configuration files are tested against the following tool versions.
+The configuration files are tested against the following minimum tool versions.
 Using significantly older versions may cause parse errors or missing-rule warnings.
+The actual tool versions are set by the Gradle plugins (or your own build configuration), not by this project.
 
 [cols="1,1"]
 |===

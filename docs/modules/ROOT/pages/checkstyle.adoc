@@ -3,7 +3,7 @@
 
 The project enforces Checkstyle with `maxErrors=0` and `maxWarnings=0`, meaning every violation is a build failure.
 The severity label (`error` vs `warning`) distinguishes structural defects from style preferences in reports, but both block the build.
-The configuration uses Checkstyle 12.2.0.
+The Checkstyle version is configured by the Gradle plugin, not by this project.
 
 == Philosophy
 
@@ -28,10 +28,6 @@ By enforcing zero warnings the codebase stays consistent without "fix later" deb
 | Max method length
 | 80 non-empty lines
 | 150 lines
-
-| Max parameters
-| 7
-| 7
 
 | Max return statements
 | 3

@@ -62,7 +62,27 @@ If configuring PMD manually, assign rulesets per task (e.g., `pmdMain` uses prod
 
 | `LoosePackageCoupling`
 | Design
-| Requires manual configuration of allowed packages; re-included with custom properties.
+| Requires manual configuration of allowed packages; not practical for a shared ruleset.
+
+| `TooManyMethods`
+| Design
+| Excluded and re-included with custom threshold (see Custom Rule Configurations below).
+
+| `LooseCoupling`
+| Best Practices
+| Excluded and re-included with custom allowed types (see Custom Rule Configurations below).
+
+| `CommentSize`
+| Documentation
+| Detailed Javadoc on framework APIs naturally exceeds default size limits.
+
+| `UseConcurrentHashMap`
+| Multithreading
+| The framework does not require `ConcurrentHashMap` everywhere a `HashMap` appears; context determines the correct choice.
+
+| `DoNotUseThreads`
+| Multithreading
+| Some framework infrastructure legitimately manages threads (e.g., test harnesses, async utilities).
 |===
 
 == Excluded Rules (Test -- additional)
