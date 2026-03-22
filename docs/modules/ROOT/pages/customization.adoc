@@ -1,0 +1,378 @@
+= Customization
+:toc: left
+:toclevels: 3
+
+The quality configurations shipped in `ultima-nexus-jvm-check` are designed to be strict by default and flexible when needed.
+This page explains every mechanism available for overriding, suppressing, or extending the rules.
+
+== General Approach
+
+The recommended approach to customization follows this priority:
+
+. *Fix the violation.* The rule exists for a reason. Understand it before suppressing it.
+. *Suppress locally.* Use an inline annotation or comment to suppress a single occurrence.
+. *Suppress by file/class.* Use a suppression file to exclude specific files or classes.
+. *Modify the rule configuration.* Override the rule's properties in your project-level configuration.
+. *Exclude the rule entirely.* Remove the rule from your project's ruleset. This is the last resort.
+
+WARNING: Never lower `maxErrors` or `maxWarnings` from zero. Allowing even one warning creates a broken-window effect that erodes quality over time.
+
+== Checkstyle Customization
+
+=== Inline Suppressions
+
+Checkstyle supports `@SuppressWarnings` for specific checks:
+
+[source,java]
+----
+@SuppressWarnings("checkstyle:MagicNumber")
+public static final int BUFFER_SIZE = 8192;
+----
+
+The annotation value must be `checkstyle:` followed by the check name (case-sensitive).
+
+=== File-Level Suppression Filter
+
+Create a file-level suppression XML and pass it via the `checkstyle.file.suppressions` property:
+
+[source,xml]
+----
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+    <!-- Suppress MagicNumber in performance test sources -->
+    <suppress files="[\\/]performanceTest[\\/]"
+              checks="MagicNumber"/>
+
+    <!-- Suppress ConstantName in a specific file -->
+    <suppress files="BenchmarkConstants\.java"
+              checks="ConstantName"/>
+</suppressions>
+----
+
+Wire it in Gradle:
+
+[source,kotlin]
+----
+checkstyle {
+    configProperties = mapOf(
+        "checkstyle.file.suppressions" to
+            file("config/checkstyle-file-suppressions.xml").absolutePath,
+        "checkstyle.suppressions" to
+            file("config/checkstyle-suppressions.xml").absolutePath,
+        "checkstyle.header.file" to
+            file("config/checkstyle-header.txt").absolutePath
+    )
+}
+----
+
+=== XPath Suppression Filter
+
+For fine-grained suppressions based on the AST, create an XPath suppression file and pass it via `checkstyle.suppressions`:
+
+[source,xml]
+----
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionXpathFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2_xpath_experimental.dtd">
+<suppressions>
+    <!-- Allow boolean parameter in this specific method -->
+    <suppress-xpath
+        files="CacheConfig\.java"
+        checks="MatchXpath"
+        query="//METHOD_DEF[IDENT[@text='setEnabled']]"/>
+</suppressions>
+----
+
+=== Configurable Properties
+
+The Checkstyle configuration reads three external properties.
+All are optional (the filters gracefully handle missing files):
+
+[cols="2,3,1"]
+|===
+| Property | Purpose | Required
+
+| `checkstyle.file.suppressions`
+| Path to a file-level `SuppressionFilter` XML.
+| No
+
+| `checkstyle.suppressions`
+| Path to a TreeWalker-level `SuppressionXpathFilter` XML.
+| No
+
+| `checkstyle.header.file`
+| Path to a regex header file for `RegexpHeader`.
+| Yes
+|===
+
+== PMD Customization
+
+=== Inline Suppressions
+
+Suppress a PMD rule on a single class or method:
+
+[source,java]
+----
+@SuppressWarnings("PMD.TooManyMethods")
+public class LargeService {
+    // Justified: each public method maps to a distinct use case
+}
+----
+
+Or suppress multiple rules:
+
+[source,java]
+----
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.CouplingBetweenObjects"})
+public class ComplexOrchestrator {
+    // ...
+}
+----
+
+=== NOPMD Comments
+
+For a single line, use a `NOPMD` comment:
+
+[source,java]
+----
+Thread.sleep(1000); // NOPMD - acceptable in performance benchmark warmup
+----
+
+NOTE: `@SuppressWarnings` is preferred over `NOPMD` because it is checked by the compiler and will produce a warning if the suppressed rule name is misspelled.
+
+=== Custom Ruleset
+
+To modify rule thresholds or exclude additional rules, create a project-level ruleset that references the base ruleset:
+
+[source,xml]
+----
+<?xml version="1.0"?>
+<ruleset name="My Project PMD Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+             https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>Project-specific PMD overrides.</description>
+
+    <!-- Include all rules from the base ruleset -->
+    <rule ref="pmdRuleset.xml"/>
+
+    <!-- Override TooManyMethods threshold -->
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="20"/>
+        </properties>
+    </rule>
+
+    <!-- Exclude a rule entirely -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="GuardLogStatement"/>
+    </rule>
+</ruleset>
+----
+
+Then point your Gradle configuration to the custom ruleset:
+
+[source,kotlin]
+----
+pmd {
+    ruleSetConfig = resources.text.fromFile("config/pmd-project.xml")
+    ruleSets = emptyList()
+}
+----
+
+== SpotBugs Customization
+
+=== Inline Suppressions
+
+Use the `@SuppressFBWarnings` annotation from `spotbugs-annotations`:
+
+[source,java]
+----
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings(
+    value = "EI_EXPOSE_REP",
+    justification = "Intentionally sharing mutable state with caller"
+)
+public List<String> getItems() {
+    return items;
+}
+----
+
+Add the annotation dependency:
+
+[source,kotlin]
+----
+dependencies {
+    compileOnly("com.github.spotbugs:spotbugs-annotations:4.9.3")
+}
+----
+
+=== Project-Level Exclusion Filter
+
+Create a supplementary filter file for project-specific exclusions:
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Legacy adapter uses non-standard serialization -->
+    <Match>
+        <Class name="com.example.legacy.LegacyAdapter"/>
+        <Bug pattern="SE_BAD_FIELD"/>
+    </Match>
+
+    <!-- Custom thread pool is safe by design -->
+    <Match>
+        <Class name="com.example.pool.ManagedThreadPool"/>
+        <Bug category="MT_CORRECTNESS"/>
+    </Match>
+</FindBugsFilter>
+----
+
+Configure SpotBugs to merge both the framework filter and the project filter:
+
+[source,kotlin]
+----
+spotbugs {
+    excludeFilter = files(
+        layout.buildDirectory.file("quality-config/spotbugs-filter.xml"),
+        file("config/spotbugs-project-filter.xml")
+    )
+}
+----
+
+=== Auxiliary Classpath
+
+Enable the auxiliary classpath to reduce false positives from missing class analysis:
+
+[source,properties]
+----
+# gradle.properties
+spotbugs.useAuxClasspath=true
+----
+
+This adds `runtimeClasspath`, `compileClasspath`, and `annotationProcessorPath` to SpotBugs' analysis scope, allowing it to resolve cross-class references correctly.
+
+== Formatter Customization
+
+=== Formatter Tags
+
+Use inline tags to disable formatting for specific regions:
+
+[source,java]
+----
+// @formatter:off
+private static final Map<String, Integer> CODES = Map.of(
+    "ALPHA",   1,
+    "BETA",    2,
+    "GAMMA",   3
+);
+// @formatter:on
+----
+
+The enabling tag is `@formatter:on` and the disabling tag is `@formatter:off`.
+
+=== Custom Formatter Profile
+
+To modify the formatter, export a new Eclipse formatter profile:
+
+. Import `java-formatter.xml` into Eclipse or IntelliJ (with the Eclipse Code Formatter plugin).
+. Modify the settings you need.
+. Export the profile to a new XML file.
+. Reference the new file in your Spotless configuration:
+
+[source,kotlin]
+----
+spotless {
+    java {
+        eclipse().configFile("config/my-formatter.xml")
+    }
+}
+----
+
+IMPORTANT: If you modify the formatter profile, ensure the line length remains at 120 characters to stay consistent with the Checkstyle `LineLength` check.
+
+== License Header Customization
+
+=== Different Copyright Holder
+
+Replace the `$COMPANY` placeholder in a copy of the template:
+
+[source,text]
+----
+/*
+ * Copyright (C) $YEAR YourCompany.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * ...
+ */
+----
+
+=== Different License
+
+Replace the entire template with your license text.
+Update both the Spotless license header file and the Checkstyle `RegexpHeader` pattern file.
+
+== Gradle Properties Reference
+
+Properties that affect quality tool behavior:
+
+[cols="2,3,1"]
+|===
+| Property | Effect | Default
+
+| `checkstyle.file.suppressions`
+| Path to file-level Checkstyle suppression XML.
+| (none)
+
+| `checkstyle.suppressions`
+| Path to XPath-based Checkstyle suppression XML.
+| (none)
+
+| `checkstyle.header.file`
+| Path to the regex header file for `RegexpHeader`.
+| (required)
+
+| `spotbugs.useAuxClasspath`
+| Adds dependency classpaths to SpotBugs' auxiliary classpath.
+| `false`
+|===
+
+== Tips for Teams
+
+=== Document Every Suppression
+
+When adding a suppression (inline or in a suppression file), always explain *why*:
+
+[source,java]
+----
+// Suppressed: boolean parameter is required by the superclass contract
+@SuppressWarnings("checkstyle:MatchXpath")
+@Override
+public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+}
+----
+
+=== Review Suppressions in Pull Requests
+
+Treat suppression additions the same as code changes.
+Every suppression should be reviewed and justified.
+
+=== Track Suppression Count
+
+Periodically audit the number of active suppressions.
+A growing count may indicate that the rules need adjustment or that the codebase is accumulating technical debt.
+
+=== Keep Tools Updated
+
+Update Checkstyle, PMD, and SpotBugs regularly.
+Newer versions add rules, fix false positives, and improve performance.
+The configuration files in `ultima-nexus-jvm-check` are tested against the versions listed on the xref:index.adoc[Overview] page.

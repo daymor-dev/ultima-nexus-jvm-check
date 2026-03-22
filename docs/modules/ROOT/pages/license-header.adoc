@@ -1,0 +1,174 @@
+= License Header
+:toc: left
+:toclevels: 3
+
+Every Java source file in the Ultima Nexus ecosystem must begin with the Apache License 2.0 header.
+The `apache-license-header.txt` template is applied automatically by Spotless and verified by Checkstyle.
+
+== Template
+
+The license header template (`apache-license-header.txt`) contains the following text:
+
+[source,text]
+----
+/*
+ * Copyright (C) $YEAR $COMPANY.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+----
+
+=== Placeholders
+
+`$YEAR`:: Replaced with the copyright year.
+Typically the year the file was first created.
+When Spotless applies the header, it substitutes the current year for new files.
+Existing files retain their original year.
+
+`$COMPANY`:: Replaced with the copyright holder's name.
+In Ultima Nexus projects, this is `daymor`.
+
+=== Resulting Header
+
+After placeholder substitution, a file header looks like this:
+
+[source,java]
+----
+/*
+ * Copyright (C) 2025 daymor.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package dev.daymor.ultimanexus.jvm.domain.identifiable;
+----
+
+== How It Is Enforced
+
+=== Spotless (Auto-Apply)
+
+Spotless inserts or corrects the license header automatically when you run:
+
+[source,bash]
+----
+./gradlew spotlessApply
+----
+
+The Spotless configuration references the template file:
+
+[source,kotlin]
+----
+spotless {
+    java {
+        licenseHeaderFile("apache-license-header.txt")
+    }
+}
+----
+
+Spotless matches the header using the content pattern and replaces the `$YEAR` and `$COMPANY` placeholders according to its configuration.
+
+=== Checkstyle (Verify)
+
+The Checkstyle configuration includes a `RegexpHeader` check that validates the header against a configurable pattern file:
+
+[source,xml]
+----
+<module name="RegexpHeader">
+    <property name="headerFile" value="${checkstyle.header.file}"/>
+    <property name="fileExtensions" value="java"/>
+</module>
+----
+
+The `checkstyle.header.file` property must point to a regex-based header file (not the Spotless template directly).
+The regex version uses `.*` for the year and company placeholders so that any valid year and company name passes validation.
+
+IMPORTANT: The `RegexpHeader` check applies only to `.java` files. Other file types (`.properties`, `.xml`) are not checked for headers.
+
+== Customizing the Header
+
+=== Using a Different Company Name
+
+Override the `$COMPANY` placeholder in your Spotless configuration:
+
+[source,kotlin]
+----
+spotless {
+    java {
+        licenseHeaderFile("apache-license-header.txt").updateYearWithLatest(true)
+    }
+}
+----
+
+Or provide a completely custom header file that replaces `$COMPANY` with your organization's name.
+
+=== Updating the Year
+
+When you modify a file in a new calendar year, the copyright year should reflect the original creation year, not the modification year.
+Some teams use a year range:
+
+[source,java]
+----
+/*
+ * Copyright (C) 2024-2025 daymor.
+ */
+----
+
+Spotless supports automatic year updates via the `updateYearWithLatest(true)` option.
+
+=== Excluding Files from Header Checks
+
+Certain files should not have a license header (e.g., generated code, `package-info.java` with only annotations).
+In Spotless:
+
+[source,kotlin]
+----
+spotless {
+    java {
+        targetExclude("**/generated/**")
+        licenseHeaderFile("apache-license-header.txt")
+    }
+}
+----
+
+In Checkstyle, use the file-level suppression filter:
+
+[source,xml]
+----
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+    <suppress files="[\\/]generated[\\/]" checks="RegexpHeader"/>
+</suppressions>
+----
+
+== Why Apache 2.0
+
+The Apache License 2.0 was chosen for the Ultima Nexus ecosystem because it:
+
+* Grants broad permissions for commercial and non-commercial use.
+* Includes an explicit patent grant.
+* Requires attribution but not copyleft (derived works can use any license).
+* Is compatible with most other open source licenses.
+* Is the standard license for Spring Boot and the broader Spring ecosystem.

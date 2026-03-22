@@ -1,0 +1,281 @@
+= Java Formatter
+:toc: left
+:toclevels: 3
+
+The `java-formatter.xml` file is an Eclipse JDT formatter profile (version 23) used by the https://github.com/diffplug/spotless[Spotless] Gradle plugin to auto-format Java source code deterministically.
+
+Every developer, CI server, and IDE produces byte-identical output when using this profile, eliminating formatting noise in code reviews.
+
+== Key Formatting Rules
+
+=== Line Length
+
+[cols="1,1"]
+|===
+| Setting | Value
+
+| Maximum line width
+| *120 characters*
+
+| Javadoc comment line width
+| *120 characters*
+|===
+
+Lines that exceed 120 characters are wrapped according to the rules described below.
+
+=== Indentation
+
+[cols="1,1"]
+|===
+| Setting | Value
+
+| Indentation character
+| *Spaces* (no tabs)
+
+| Indentation size
+| *4 spaces*
+
+| Continuation indentation
+| *1 unit* (4 spaces)
+
+| Array initializer continuation
+| *1 unit* (4 spaces)
+|===
+
+The continuation indentation of 1 unit (rather than the traditional 2 units / 8 spaces) keeps deeply nested generic signatures and fluent chains readable within the 120-character limit.
+
+=== Braces
+
+All opening braces use *end-of-line* (K&R) style:
+
+[source,java]
+----
+public class Company { // <-- brace on same line
+
+    public void process() { // <-- brace on same line
+
+        if (condition) { // <-- brace on same line
+            // ...
+        }
+    }
+}
+----
+
+This applies consistently to:
+
+* Type declarations (class, interface, enum, record, annotation)
+* Method and constructor declarations
+* Control structures (`if`, `for`, `while`, `switch`, `try`)
+* Anonymous type declarations
+* Lambda bodies
+* Array initializers
+* Enum constants
+
+=== Blank Lines
+
+[cols="2,1"]
+|===
+| Context | Blank Lines
+
+| Before code block
+| 1
+
+| After code block
+| 0
+
+| At beginning of code block
+| 1
+
+| At end of method body
+| Collapse to 0 (setting: `-1`)
+
+| At end of class body
+| Collapse to 0 (setting: `-1`)
+
+| After package declaration
+| 1
+
+| Before imports
+| 1
+
+| After imports
+| 1
+
+| Between import groups
+| 1
+
+| Before first class body declaration
+| 0
+
+| Before fields
+| 0
+
+| Before methods
+| 1
+
+| Between type declarations
+| 1
+
+| Before member types
+| 1
+
+| Before new chunk (different declaration kind)
+| 1
+
+| Maximum consecutive blank lines preserved
+| 1
+|===
+
+The "1 blank line at beginning of code block" rule means that the first statement inside a method body is separated from the opening brace by one blank line.
+This improves visual separation between the method signature and its body.
+
+=== Wrapping
+
+Operators wrap *before* the operator on the new line:
+
+[source,java]
+----
+boolean result = longConditionA
+    && longConditionB
+    || longConditionC;
+
+BigDecimal total = subtotal
+    .add(tax)
+    .subtract(discount);
+----
+
+This applies to:
+
+* Multiplicative operators (`*`, `/`, `%`)
+* Additive operators (`+`, `-`)
+* String concatenation
+* Logical operators (`&&`, `||`)
+* Bitwise operators
+* Or-operator in multi-catch
+
+=== Comments
+
+[cols="2,1"]
+|===
+| Setting | Value
+
+| Format Javadoc comments
+| Yes
+
+| Format block comments
+| Yes
+
+| Format line comments
+| Yes
+
+| Javadoc: indent root tags
+| No
+
+| Javadoc: indent description after `@param`
+| Yes
+
+| Javadoc: new line for `@param`
+| No
+
+| Clear blank lines in Javadoc
+| Yes
+
+| Clear blank lines in block comments
+| No
+
+| Preserve whitespace between code and line comment
+| Yes
+|===
+
+=== Formatter Tags
+
+The formatter respects inline on/off tags:
+
+[source,java]
+----
+// @formatter:off
+private static final String COMPLEX_REGEX =
+    "(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})";
+// @formatter:on
+----
+
+Use these tags sparingly -- only for content where automatic formatting would reduce readability (complex regex patterns, ASCII art in comments, carefully aligned table data).
+
+== How It Is Applied
+
+=== Via Spotless (Recommended)
+
+The Ultima Nexus Gradle plugins apply the formatter through the Spotless plugin:
+
+[source,kotlin]
+----
+spotless {
+    java {
+        eclipse().configFile("java-formatter.xml")
+        licenseHeaderFile("apache-license-header.txt")
+    }
+}
+----
+
+Run the formatter manually:
+
+[source,bash]
+----
+./gradlew spotlessApply    # Format all Java files
+./gradlew spotlessCheck    # Verify formatting without modifying files
+----
+
+TIP: In the Ultima Nexus ecosystem, `./gradlew qualityGate` runs `spotlessApply` automatically before the quality checks, so code is always formatted before Checkstyle and PMD analyze it.
+
+=== Via IDE
+
+==== IntelliJ IDEA
+
+Import the Eclipse formatter profile into IntelliJ using the https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter[Eclipse Code Formatter] plugin:
+
+. Install the "Eclipse Code Formatter" plugin from the JetBrains Marketplace.
+. Go to *Settings* -> *Eclipse Code Formatter*.
+. Enable "Use the Eclipse Code Formatter".
+. Set the "Eclipse Java Formatter config file" to `java-formatter.xml`.
+. Under "Import order", set the order to match the Checkstyle import configuration:
++
+----
+java
+javax
+jakarta
+\#
+----
+
+NOTE: IntelliJ's built-in formatter uses a different configuration format. The Eclipse Code Formatter plugin ensures exact compatibility with the Spotless output.
+
+==== Eclipse
+
+. Go to *Window* -> *Preferences* -> *Java* -> *Code Style* -> *Formatter*.
+. Click *Import* and select `java-formatter.xml`.
+. The profile "java formatter" will appear in the list.
+. Click *Apply*.
+
+==== VS Code
+
+Install the https://marketplace.visualstudio.com/items?itemName=redhat.java[Language Support for Java] extension and configure it:
+
+[source,json]
+----
+{
+    "java.format.settings.url": "path/to/java-formatter.xml",
+    "java.format.settings.profile": "java formatter"
+}
+----
+
+== Formatting Philosophy
+
+The formatter enforces a single canonical style.
+There is no room for personal preference in formatting -- this is by design.
+The goals are:
+
+. *Eliminate formatting debates* in code reviews.
+. *Minimize diff noise* by ensuring every developer produces identical output.
+. *Reduce cognitive load* by making all code look the same.
+
+If the formatter's output looks unusual for a particular piece of code, use `@formatter:off` / `@formatter:on` tags.
+But consider whether the code itself could be restructured to format well automatically.

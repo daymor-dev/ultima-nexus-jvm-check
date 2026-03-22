@@ -1,0 +1,207 @@
+= SpotBugs Configuration
+:toc: left
+:toclevels: 3
+
+SpotBugs analyzes compiled bytecode to detect potential bugs, security vulnerabilities, and performance issues.
+The `spotbugs-filter.xml` file is an *exclusion filter* -- it tells SpotBugs which classes and bug patterns to skip, preventing false positives that are normal in Spring Boot and JPA applications.
+
+== How SpotBugs Fits In
+
+Unlike Checkstyle and PMD (which analyze source code), SpotBugs works on `.class` files.
+This gives it the ability to detect bugs that are invisible at the source level, such as:
+
+* Null pointer dereferences across method boundaries
+* Incorrect synchronization on shared mutable state
+* Serialization contract violations
+* Inefficient use of boxed primitives
+
+The exclusion filter does *not* disable SpotBugs rules globally.
+It narrows the scope of specific bug patterns to avoid false positives caused by framework conventions (dependency injection, JPA proxies, etc.).
+
+== Exclusion Patterns
+
+=== Generated Code
+
+[source,xml]
+----
+<Match>
+    <Source name="~.*[\\/]generated[\\/].*"/>
+</Match>
+----
+
+All files under any `generated` directory are excluded.
+This covers annotation processor output, MapStruct mappers, and other code generation tools.
+
+=== JMH Generated Code
+
+[source,xml]
+----
+<Match>
+    <Package name="~.*\.jmh_generated"/>
+</Match>
+----
+
+JMH (Java Microbenchmark Harness) generates harness classes in `*.jmh_generated` packages.
+These classes inherit from benchmark classes and trigger spurious warnings.
+
+=== Module Descriptors
+
+[source,xml]
+----
+<Match>
+    <Source name="module-info.java"/>
+</Match>
+----
+
+`module-info.java` files have a unique structure that SpotBugs cannot meaningfully analyze.
+
+=== Dependency Injection Fields
+
+[source,xml]
+----
+<Match>
+    <Bug pattern="UWF_UNWRITTEN_FIELD"/>
+    <Or>
+        <Annotation name="org.springframework.beans.factory.annotation.Autowired"/>
+        <Annotation name="org.springframework.beans.factory.annotation.Value"/>
+        <Annotation name="jakarta.inject.Inject"/>
+        <Annotation name="javax.inject.Inject"/>
+    </Or>
+</Match>
+----
+
+Fields annotated with `@Autowired`, `@Value`, or `@Inject` are written by the dependency injection container at runtime, not in source code.
+SpotBugs sees these fields as never written and reports `UWF_UNWRITTEN_FIELD`.
+This exclusion silences that false positive.
+
+=== Configuration Properties
+
+[source,xml]
+----
+<Match>
+    <Or>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Or>
+    <Annotation name="org.springframework.boot.context.properties.ConfigurationProperties"/>
+</Match>
+----
+
+`@ConfigurationProperties` classes require mutable fields and getter/setter pairs for Spring Boot's property binding mechanism.
+SpotBugs flags these as exposing internal representation, but mutability is inherent to the pattern.
+
+=== JPA Entity Equality
+
+[source,xml]
+----
+<Match>
+    <Bug pattern="EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS"/>
+    <Annotation name="jakarta.persistence.Entity"/>
+</Match>
+----
+
+Hibernate-proxy-aware `equals()` implementations must check the class of the other operand against `HibernateProxy.getHibernateLazyInitializer().getPersistentClass()`.
+This legitimate pattern looks like a type-mismatch bug to SpotBugs.
+
+=== Spring Bean Internal Representation
+
+[source,xml]
+----
+<Match>
+    <Or>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Or>
+    <Or>
+        <Annotation name="org.springframework.stereotype.Service"/>
+        <Annotation name="org.springframework.stereotype.Component"/>
+        <Annotation name="org.springframework.stereotype.Repository"/>
+        <Annotation name="org.springframework.web.bind.annotation.RestController"/>
+        <Annotation name="org.springframework.stereotype.Controller"/>
+    </Or>
+</Match>
+----
+
+Spring beans are singletons managed by the container.
+Their injected dependencies are shared references, not mutable internal state.
+The `EI_EXPOSE_REP` and `EI_EXPOSE_REP2` patterns do not apply to constructor-injected or field-injected beans.
+
+== Auxiliary Classpath
+
+SpotBugs needs the full dependency graph on its analysis classpath to resolve cross-class references.
+Without it, you will see "missing class" warnings for annotations and types from dependencies.
+
+The Ultima Nexus Gradle plugins provide an opt-in `useAuxClasspath` option:
+
+[source,properties]
+----
+# gradle.properties
+spotbugs.useAuxClasspath=true
+----
+
+When enabled, the plugin adds `runtimeClasspath`, `compileClasspath`, and `annotationProcessorPath` to SpotBugs' `auxClassPaths`.
+
+IMPORTANT: In Gradle 9.x, `configurations.compileOnly` and `configurations.annotationProcessor` are *not* directly resolvable.
+The plugin uses source set equivalents (`sourceSet.compileClasspath`, `sourceSet.annotationProcessorPath`) to avoid resolution errors.
+
+NOTE: Some "missing class" warnings may persist for classes that are intentionally not on the classpath (e.g., `lombok.Generated`, Spring's `Indexed`, `MessageSource`).
+These are harmless and unfixable without adding unnecessary dependencies.
+
+== Gradle Integration
+
+=== Basic Configuration
+
+[source,kotlin]
+----
+spotbugs {
+    toolVersion = "4.9.3"
+    excludeFilter = layout.buildDirectory.file("quality-config/spotbugs-filter.xml")
+}
+----
+
+=== Report Format
+
+[source,kotlin]
+----
+tasks.withType<SpotBugsTask>().configureEach {
+    reports.register("html") {
+        required.set(true)
+    }
+    reports.register("sarif") {
+        required.set(true)
+    }
+}
+----
+
+HTML reports are the most readable for local development.
+SARIF reports integrate with GitHub Code Scanning and other CI tools.
+
+== Adding Project-Specific Exclusions
+
+If a SpotBugs finding is a confirmed false positive in your project, create a project-level exclusion filter that supplements the framework filter:
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Project-specific: custom serialization in LegacyAdapter -->
+    <Match>
+        <Class name="com.example.adapter.LegacyAdapter"/>
+        <Bug pattern="SE_BAD_FIELD"/>
+    </Match>
+</FindBugsFilter>
+----
+
+Then configure SpotBugs to use both filters:
+
+[source,kotlin]
+----
+spotbugs {
+    excludeFilter = files(
+        layout.buildDirectory.file("quality-config/spotbugs-filter.xml"),
+        file("config/spotbugs-project-filter.xml")
+    )
+}
+----
+
+WARNING: Exclusions should be narrow. Always target a specific class and bug pattern rather than broad wildcards.

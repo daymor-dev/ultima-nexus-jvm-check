@@ -1,0 +1,7 @@
+* xref:index.adoc[Overview]
+* xref:checkstyle.adoc[Checkstyle]
+* xref:pmd.adoc[PMD]
+* xref:spotbugs.adoc[SpotBugs]
+* xref:formatter.adoc[Java Formatter]
+* xref:license-header.adoc[License Header]
+* xref:customization.adoc[Customization]

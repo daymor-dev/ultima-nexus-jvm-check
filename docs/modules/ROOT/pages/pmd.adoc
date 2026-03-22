@@ -1,0 +1,159 @@
+= PMD
+:description: PMD static analysis configuration for Ultima Nexus JVM
+
+The project ships two PMD rulesets -- a strict ruleset for production code and a relaxed ruleset for test code.
+Both enable all eight standard PMD Java categories and then selectively exclude or reconfigure rules that conflict with framework conventions.
+
+== Rulesets
+
+[cols="1,2,1"]
+|===
+| File | Scope | Philosophy
+
+| `pmdRuleset.xml`
+| Production source sets (`src/main/java`)
+| Maximum strictness. All categories enabled with few exclusions.
+
+| `pmdRuleset-test.xml`
+| Test source sets (`src/test/java`, `src/integrationTest/java`, `src/functionalTest/java`, `src/performanceTest/java`)
+| Relaxed. Additional exclusions for patterns that are normal in test code.
+|===
+
+The Gradle plugins assign the correct ruleset per source set automatically.
+If configuring PMD manually, assign rulesets per task (e.g., `pmdMain` uses production, `pmdTest` / `pmdIntegrationTest` use test).
+
+== Categories Enabled
+
+[cols="1,3"]
+|===
+| Category | Purpose
+
+| Best Practices    | Idiomatic Java usage and avoidance of error-prone patterns.
+| Code Style        | Naming conventions, import organization, formatting consistency.
+| Design            | Coupling, complexity, and cohesion checks.
+| Documentation     | Javadoc presence and quality.
+| Error Prone       | Common programming mistakes that lead to bugs.
+| Multithreading    | Thread-safety issues and concurrency anti-patterns.
+| Performance       | Avoidable performance bottlenecks.
+| Security          | Security-sensitive coding patterns.
+|===
+
+== Excluded Rules (Production)
+
+[cols="2,1,3"]
+|===
+| Rule | Category | Why Excluded
+
+| `ExhaustiveSwitchHasDefault`
+| Best Practices
+| Exhaustive `switch` expressions (Java 21+) do not need a `default` branch.
+
+| `OnlyOneReturn`
+| Code Style
+| Multiple return statements improve readability in guard-clause patterns.
+
+| `AtLeastOneConstructor`
+| Code Style
+| Lombok generates constructors; requiring an explicit one adds noise.
+
+| `CommentDefaultAccessModifier`
+| Code Style
+| Package-private access is intentional and does not need a comment marker.
+
+| `LoosePackageCoupling`
+| Design
+| Requires manual configuration of allowed packages; re-included with custom properties.
+|===
+
+== Excluded Rules (Test -- additional)
+
+The test ruleset inherits all production exclusions and adds:
+
+[cols="2,1,3"]
+|===
+| Rule | Category | Why Excluded
+
+| `UnitTestShouldIncludeAssert`
+| Best Practices
+| BDDMockito verification (`then().should()`) replaces explicit assertions.
+
+| `UnitTestContainsTooManyAsserts`
+| Best Practices
+| Integration and functional tests legitimately make multiple assertions per scenario.
+
+| `ImplicitFunctionalInterface`
+| Best Practices
+| Test helper interfaces may have a single abstract method without intending to be functional interfaces.
+
+| `TooManyStaticImports`
+| Code Style
+| Test classes routinely static-import from AssertJ, Mockito, Spring Test, and REST Assured.
+
+| `LawOfDemeter`
+| Design
+| Fluent assertion chains (`assertThat(x).extracting(...).contains(...)`) deliberately violate Demeter.
+
+| `ExcessiveImports`
+| Design
+| Test classes wiring full Spring contexts naturally import many classes.
+
+| `CommentRequired`
+| Documentation
+| Javadoc is not required on test methods; clear test names serve as documentation.
+|===
+
+== Custom Rule Configurations
+
+Several rules are re-included with project-specific thresholds:
+
+[cols="2,2,2"]
+|===
+| Rule | Setting | Rationale
+
+| `LooseCoupling`
+| `allowedTypes`: `Dictionary`, `HttpHeaders`
+| Spring's HTTP API expects `HttpHeaders` as a concrete type.
+
+| `ShortMethodName`
+| min 2 characters
+| Single-character names forbidden; `of`, `id` allowed.
+
+| `ShortVariable`
+| min 2 characters
+| Single-character names forbidden; `id`, `em`, `tx` allowed.
+
+| `LongVariable`
+| max 30 characters
+| Encourages concise naming without penalizing descriptive names.
+
+| `TypeParameterNamingConventions`
+| `[A-Z]+(_[A-Z]+)*[0-9]*`
+| Allows multi-character uppercase names like `I_ADAPTED`, `K1` for the framework's generic-heavy interfaces.
+
+| `ClassNamingConventions`
+| `testClassPattern` includes `Test`, `IT`, `FT`, `PT`
+| Matches all four test suffixes used by the project.
+
+| `TooManyMethods`
+| Production: 15, Test: 20
+| Test classes need more methods since each scenario is its own method.
+|===
+
+== Suppressing Individual Violations
+
+Use the standard PMD `@SuppressWarnings` annotation when a rule violation is intentional:
+
+[source,java]
+----
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+public class Constants {
+    // Intentionally repeated string literals
+}
+----
+
+WARNING: Suppress sparingly. Every suppression should have a clear justification, ideally documented in a comment.
+
+== See Also
+
+* https://docs.pmd-code.org/latest/pmd_rules_java.html[PMD Java Rules Reference] -- full documentation of every rule and its properties.
+* xref:customization.adoc[Customization] -- how to override or suppress rules in your project.

@@ -1,0 +1,214 @@
+= Checkstyle
+:description: Zero-tolerance Checkstyle configuration for Ultima Nexus JVM
+
+The project enforces Checkstyle with `maxErrors=0` and `maxWarnings=0`, meaning every violation is a build failure.
+The severity label (`error` vs `warning`) distinguishes structural defects from style preferences in reports, but both block the build.
+The configuration uses Checkstyle 12.2.0.
+
+== Philosophy
+
+Code style is not optional.
+Automated formatting (Spotless) handles whitespace and import ordering; Checkstyle catches everything else -- naming, Javadoc, complexity, and correctness patterns.
+By enforcing zero warnings the codebase stays consistent without "fix later" debt.
+
+== What's Different from Defaults
+
+[cols="2,1,1"]
+|===
+| Setting | Project Value | Checkstyle Default
+
+| Max line length
+| 120
+| 80
+
+| Max file length
+| 1000 lines
+| 2000 lines
+
+| Max method length
+| 80 non-empty lines
+| 150 lines
+
+| Max parameters
+| 7
+| 7
+
+| Max return statements
+| 3
+| 2
+
+| Max nested `for` / `if` / `try` depth
+| 3 each
+| 1 each
+
+| Lambda body length
+| 20 lines
+| 10 lines
+
+| Anonymous inner class length
+| 40 lines
+| 20 lines
+
+| Max methods per class
+| 30 (per access level)
+| 100
+
+| Abbreviation length
+| 0 consecutive uppercase (exceptions: `IT`, `FT`, `PT`, `UUID`)
+| 3
+
+| Star imports
+| Forbidden (except static allow-list)
+| Allowed
+
+| Javadoc
+| Required on all public APIs (`@Override` and `@Test` exempt)
+| Optional
+
+| License header
+| Apache 2.0 (validated via `RegexpHeader`)
+| None
+
+| `module-info.java`
+| Excluded from all checks
+| Included
+|===
+
+== Key Rules by Category
+
+[cols="2,1,3"]
+|===
+| Category | Rules | Highlights
+
+| File-level
+| 9
+| Tab characters, trailing whitespace, license header, line/file length, `package-info.java` required.
+
+| Annotations
+| 4
+| `@Override` required, `@Deprecated` must match Javadoc `@deprecated`.
+
+| Blocks
+| 6
+| K&R brace style, braces always required, no empty blocks or catch blocks.
+
+| Class design
+| 9
+| One top-level class per file, `final` for private-constructor classes, no mutable exceptions.
+
+| Imports
+| 6
+| No star imports, enforced import order (`java` -> `javax/jakarta` -> third-party -> static), no unused imports.
+
+| Javadoc
+| 17
+| Full Javadoc on public types and methods, tag ordering, paragraph formatting, summary sentence required.
+
+| Naming
+| 17
+| `PascalCase` types, `camelCase` members, `UPPER_SNAKE_CASE` constants, `Abstract*`/`*Factory` for abstract classes.
+
+| Complexity & size
+| 9
+| Method length, parameter count, nesting depth, return count, lambda body length.
+
+| Coding rules
+| 14
+| No magic numbers, no double-brace init, `equals`/`hashCode` paired, no `IllegalCatch`/`IllegalThrows`, no inner assignments.
+|===
+
+== Static Import Allow-List
+
+Static imports are forbidden by default.
+The following packages are exempt, primarily for use in test code:
+
+[cols="1,2"]
+|===
+| Library | Packages
+
+| AssertJ
+| `org.assertj.core.api.Assertions`
+
+| JUnit
+| `org.junit.Assert`, `org.junit.jupiter.api.Assertions`, `org.junit.Assume`, `org.junit.internal.matchers.ThrowableMessageMatcher`
+
+| Hamcrest
+| `org.hamcrest.CoreMatchers`, `org.hamcrest.Matchers`
+
+| Mockito
+| `org.mockito.Mockito`, `org.mockito.BDDMockito`, `org.mockito.Matchers`, `org.mockito.ArgumentMatchers`
+
+| Spring Boot Test
+| `...configurationprocessor.ConfigurationMetadataMatchers`, `...configurationprocessor.TestCompiler`, `...test.autoconfigure.AutoConfigurationImportedCondition`
+
+| Spring REST Docs
+| `...restdocs.mockmvc.MockMvcRestDocumentation`, `...restdocs.hypermedia.HypermediaDocumentation`
+
+| Spring MVC Test
+| `...test.web.servlet.request.MockMvcRequestBuilders`, `...test.web.servlet.result.MockMvcResultMatchers`, `...test.web.servlet.setup.MockMvcBuilders`
+
+| Spring REST Client Test
+| `...test.web.client.match.MockRestRequestMatchers`, `...test.web.client.response.MockRestResponseCreators`
+
+| Spring Security Test
+| `...security.test.web.servlet.request.SecurityMockMvcRequestBuilders`, `...SecurityMockMvcRequestPostProcessors`, `...setup.SecurityMockMvcConfigurers`
+
+| Spring WebFlux
+| `...web.reactive.function.server.RequestPredicates`, `...RouterFunctions`
+|===
+
+== Suppressions
+
+Two optional suppression mechanisms are supported:
+
+`${checkstyle.file.suppressions}`::
+A file-level `SuppressionFilter` (XPath-free).
+Accepts a file path via a Gradle/Maven property.
+Used to suppress entire files or file patterns.
+
+`${checkstyle.suppressions}`::
+A TreeWalker-level `SuppressionXpathFilter`.
+Accepts a file path via a Gradle/Maven property.
+Used for fine-grained, XPath-based suppressions on specific AST nodes.
+
+Both properties have `optional="true"`, so builds succeed when no suppression file is provided.
+
+See xref:customization.adoc[Customization] for details on writing suppression files.
+
+== Custom Rules
+
+=== No Boolean Parameters
+
+Public methods in production code must not accept `boolean` parameters -- use enums or dedicated types instead.
+
+Exemptions: fluent setters (single `boolean` parameter assigning to a field), fluent builder-style setters returning `this`, and test classes (`*Test`, `*IT`, `*FT`, `*PT`).
+
+=== BDDMockito Enforcement
+
+A `RegexpSinglelineJava` check forbids `org.mockito.Mockito.when`, `doThrow`, and `doAnswer` in favor of BDDMockito equivalents (`given`, `willThrow`, `willAnswer`).
+
+=== AssertJ Enforcement
+
+A `RegexpSinglelineJava` check forbids `org.junit.Assert.assert*` in favor of AssertJ assertions.
+
+== Built-in Suppressions
+
+The configuration includes several XPath-based suppressions for common framework patterns:
+
+Fluent setters::
+`HiddenField` is suppressed for methods that take a single parameter, assign it to a field via `this.field = param`, and return `void` or `this`.
+
+`@SpringBootApplication` classes::
+`HideUtilityClassConstructor` is suppressed because Spring Boot requires a public constructor.
+
+Lombok `@UtilityClass`::
+`AbbreviationAsWordInName` and `MemberName` are suppressed on `final` fields (Lombok makes them `static final`).
+A `MatchXpath` rule re-enforces `UPPER_SNAKE_CASE` for those constants.
+
+Test classes::
+`IllegalThrows` is suppressed for classes whose names end in `Test`, `IT`, `FT`, or `PT`, since test methods commonly declare `throws Exception`.
+
+== See Also
+
+* https://checkstyle.org/checks.html[Checkstyle Checks Reference] -- full documentation of every check and its properties.
+* xref:customization.adoc[Customization] -- how to override or suppress rules in your project.
