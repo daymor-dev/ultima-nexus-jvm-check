@@ -5,6 +5,8 @@
 :source-highlighter: highlight.js
 :highlightjs-theme: monokai
 
+image::ultima-nexus-logo.png[Ultima Nexus JVM Check,200]
+
 image:https://img.shields.io/github/v/release/daymor-dev/ultima-nexus-jvm-check?label=version[Version, link="https://github.com/daymor-dev/ultima-nexus-jvm-check/releases/latest"]
 image:https://img.shields.io/github/license/daymor-dev/ultima-nexus-jvm-check[License]
 image:https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/ci.yml/badge.svg[CI, link="https://github.com/daymor-dev/ultima-nexus-jvm-check/actions/workflows/ci.yml"]
