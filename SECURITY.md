@@ -2,5 +2,4 @@
 
 ## Reporting a Vulnerability
 
-It's possible to report a vulnerability by opening an [issue](https://github.com/daymor-dev/ultima-nexus-jvm-check/issues).
-Please check before if the issue have not been already reported.
+If you discover a security vulnerability, please open a [GitHub issue](https://github.com/daymor-dev/ultima-nexus-jvm-check/issues) or use [GitHub's private security advisory](https://github.com/daymor-dev/ultima-nexus-jvm-check/security/advisories/new) for sensitive reports.
