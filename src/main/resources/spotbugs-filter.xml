@@ -47,6 +47,21 @@
         <Annotation name="jakarta.persistence.Entity"/>
     </Match>
 
+    <!--
+        JPA Entities: collection relationships require mutable fields (Set, List).
+        Exemption for nested classes of entities (e.g. Lombok-generated $Builder)
+        lives in per-project generated filter files emitted by the Ultima Nexus
+        annotation processors under META-INF/spotbugs-filters/, merged with this
+        base filter by the ultima-nexus-jvm-gradle-plugins SpotBugs convention plugin.
+    -->
+    <Match>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+        <Annotation name="jakarta.persistence.Entity"/>
+    </Match>
+
     <!-- Spring Beans: injected dependencies are shared singletons, not mutable internal state -->
     <Match>
         <Or>
