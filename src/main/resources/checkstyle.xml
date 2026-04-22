@@ -305,6 +305,10 @@
         <module name="ParameterNumber">
             <property name="severity" value="warning"/>
         </module>
+        <module name="RecordComponentNumber">
+            <property name="severity" value="warning"/>
+            <property name="max" value="7"/>
+        </module>
 
         <module name="EmptyForInitializerPad">
             <property name="severity" value="warning"/>
