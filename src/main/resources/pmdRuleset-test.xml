@@ -65,7 +65,8 @@
     <rule ref="category/java/bestpractices.xml/LooseCoupling">
         <properties>
             <property name="allowedTypes"
-                      value="java.util.Dictionary, org.springframework.http.HttpHeaders"/>
+                      value="java.util.Dictionary, org.springframework.http.HttpHeaders,
+                      com.tngtech.archunit.core.domain.JavaClasses"/>
         </properties>
     </rule>
 
