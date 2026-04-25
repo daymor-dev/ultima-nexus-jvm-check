@@ -19,6 +19,7 @@
     <rule ref="category/java/codestyle.xml">
         <exclude name="ShortMethodName"/>
         <exclude name="ShortVariable"/>
+        <exclude name="ShortClassName"/>
         <exclude name="LongVariable"/>
         <exclude name="OnlyOneReturn"/>
         <exclude name="AtLeastOneConstructor"/>
@@ -65,6 +66,12 @@
     <rule ref="category/java/codestyle.xml/ShortMethodName">
         <properties>
             <property name="minimum" value="2" />
+        </properties>
+    </rule>
+
+    <rule ref="category/java/codestyle.xml/ShortClassName">
+        <properties>
+            <property name="minimum" value="4" />
         </properties>
     </rule>
 
